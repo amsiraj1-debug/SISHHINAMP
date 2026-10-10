@@ -1,0 +1,31 @@
+name: Build Windows VST3
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DSISHHIN_TESTS=ON
+      - name: Compile VST3, standalone, and tests
+        run: cmake --build build --config Release --parallel 2
+      - name: Audio regression checks
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Render editor
+        run: ./build/SishhinTests_artefacts/Release/SishhinTests.exe --render
+      - name: Package
+        shell: pwsh
+        run: ./scripts/package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SISHHIN-AMP-Windows-x64
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
