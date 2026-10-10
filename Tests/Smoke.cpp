@@ -7,7 +7,7 @@ void check(bool condition,const char* message){if(!condition)throw std::runtime_
 void signal(AudioBuffer<float>& b,double sr,int offset=0){for(int c=0;c<b.getNumChannels();++c)for(int i=0;i<b.getNumSamples();++i)b.setSample(c,i,.13f*std::sin(static_cast<float>((i+offset)*MathConstants<double>::twoPi*110/sr)));}
 int main(int argc,char** argv){ScopedJuceInitialiser_GUI init;
 try{
-    if(argc>1 && String(argv[1])=="--render"){auto p=std::make_unique<SishhinProcessor>();std::unique_ptr<AudioProcessorEditor> e(p->createEditor());auto image=e->createComponentSnapshot(e->getLocalBounds());File file=File::getCurrentWorkingDirectory().getChildFile("SISHHIN-AMP.png");auto stream=file.createOutputStream();check(stream!=nullptr,"PNG stream");PNGImageFormat().writeImageToStream(image,*stream);std::cout<<file.getFullPathName()<<std::endl;return 0;}
+    if(argc>1 && String(argv[1])=="--render"){auto p=std::make_unique<SishhinProcessor>();std::unique_ptr<AudioProcessorEditor> e(p->createEditor());auto image=e->createComponentSnapshot(e->getLocalBounds());File file=File::getCurrentWorkingDirectory().getChildFile("SISHHIN-AMP.png");auto stream=file.createOutputStream();check(stream!=nullptr,"PNG stream");stream->setPosition(0);stream->truncate();check(PNGImageFormat().writeImageToStream(image,*stream),"PNG render");std::cout<<file.getFullPathName()<<std::endl;return 0;}
     for(double sr:{44100.,48000.,96000.})for(int chans:{1,2}){
         auto p=std::make_unique<SishhinProcessor>();p->setPlayConfigDetails(chans,chans,sr,256);p->prepareToPlay(sr,256);MidiBuffer midi;AudioBuffer<float> b(chans,777);
         for(int preset=0;preset<6;++preset){p->factoryPreset(preset);double energy=0;

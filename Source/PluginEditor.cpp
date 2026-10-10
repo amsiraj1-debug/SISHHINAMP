@@ -46,10 +46,10 @@ SishhinEditor::SishhinEditor(SishhinProcessor& p):AudioProcessorEditor(p),proces
     toggle("characterOn","CHARACTER",{438,76,185,28});
     knob("distortion","DISTORTION",{396,111,80,103},"Intensity of the selected character distortion.");knob("tone","TONE",{489,111,80,103},"Character low-pass tone filter.");knob("colour","COLOUR",{582,111,80,103},"Character weight and asymmetric saturation.");
     choice("engine",{"RAZOR / cutting","MIRE / thick fuzz","RELIC / octave fuzz","MAUL / growl"},{407,223,243,24});
-    choice("speed",{"1/4","1/8","1/16","1/32","1/8 dotted","1/16 dotted","1/8 triplet","1/16 triplet"},{407,287,110,23});
-    toggle("stutterOn","STUTTER",{407,258,100,22});toggle("tighten","TIGHTEN",{410,327,100,22});
+    choice("speed",{"1/4","1/8","1/16","1/32","1/8 dotted","1/16 dotted","1/8 triplet","1/16 triplet"},{400,292,99,23});
+    toggle("stutterOn","STUTTER",{400,258,98,22});toggle("tighten","TIGHTEN",{400,330,98,22});
     knob("depth","DEPTH",{574,255,80,100},"Rhythmic gate depth. Syncs to host tempo and transport.");
-    knob("makeup","LEVEL dB",{491,313,74,66},"Character output makeup gain.");
+    knob("makeup","LEVEL dB",{502,255,70,100},"Character output makeup gain.");
     toggle("pitchOn","PITCH",{734,76,185,28});
     knob("whammy","WHAMMY",{697,112,89,106},"Pitch shift from -24 to +12 semitones. Automatable.");knob("dissonance","DISSONANCE",{871,112,89,106},"Blend a voice shifted one semitone upward.");
     toggle("cleanse","CLEANSE",{787,164,87,22});switches.back()->button.setTooltip("Suppress the sub-octave while Whammy moves away from zero.");
