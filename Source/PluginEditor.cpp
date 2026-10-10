@@ -16,13 +16,21 @@ void MetalLook::drawRotarySlider(Graphics& g,int x,int y,int w,int h,float pos,f
     if(!slider.isEnabled()){g.setColour(Colour(0x669a998f));g.fillEllipse(cx-rad,cy-rad,size,size);}
 }
 void MetalLook::drawButtonBackground(Graphics& g,Button& b,const Colour&,bool hover,bool down){auto r=b.getLocalBounds().toFloat().reduced(.5f);g.setGradientFill(ColourGradient(Colour(hover?0xff50443b:0xff393633),0,0,Colour(down?0xff6d1d1b:0xff121313),0,r.getHeight(),false));g.fillRoundedRectangle(r,3);g.setColour(Colour(0xff665e51));g.drawRoundedRectangle(r,3,1);}
+void MetalLook::drawLinearSlider(Graphics& g,int x,int y,int w,int h,float pos,float,float,Slider::SliderStyle style,Slider&){
+    const bool vertical=style==Slider::LinearVertical;float cx=x+w*.5f,cy=y+h*.5f;
+    g.setColour(ink);if(vertical)g.fillRoundedRectangle(cx-3,static_cast<float>(y),6,static_cast<float>(h),2);else g.fillRoundedRectangle(static_cast<float>(x),cy-2,static_cast<float>(w),4,2);
+    Rectangle<float> thumb=vertical?Rectangle<float>(cx-8,pos-15,16,30):Rectangle<float>(pos-13,cy-6,26,12);
+    g.setColour(Colour(0x55000000));g.fillRect(thumb.translated(2,3));g.setGradientFill(ColourGradient(light,thumb.getX(),thumb.getY(),Colour(0xff4d4b45),thumb.getRight(),thumb.getBottom(),false));g.fillRoundedRectangle(thumb,2);g.setColour(ink);g.drawRoundedRectangle(thumb,2,1);
+    if(vertical)g.drawHorizontalLine(roundToInt(pos),cx-6,cx+6);else g.drawVerticalLine(roundToInt(pos),cy-4,cy+4);
+}
 void MetalLook::drawToggleButton(Graphics& g,ToggleButton& b,bool hover,bool){auto r=b.getLocalBounds();const bool header=b.getProperties().getWithDefault("header",false);if(header)drawButtonBackground(g,b,ink,hover,false);
     const float cy=r.getHeight()*.5f;g.setColour(Colour(0xff302925));g.fillEllipse(7,cy-5,10,10);if(b.getToggleState()){g.setColour(Colour(0x559f1717));g.fillEllipse(3,cy-9,18,18);g.setColour(Colour(0xffff4c42));g.fillEllipse(9,cy-3,6,6);}else{g.setColour(Colour(0xff111111));g.fillEllipse(9,cy-3,6,6);}
-    text(g,b.getButtonText(),r.withTrimmedLeft(23),header?14.f:12.f,header?light:ink,Justification::centredLeft);
+    text(g,b.getButtonText(),r.withTrimmedLeft(23),header?14.f:12.f,header || b.getY()>730?light:ink,Justification::centredLeft);
 }
 void SishhinEditor::knob(const char* id,const char* name,Rectangle<int> bounds,const String& tip,Slider::SliderStyle style){
     auto k=std::make_unique<Knob>();k->bounds=bounds;k->label.setText(name,dontSendNotification);k->label.setJustificationType(Justification::centred);k->label.setFont(Font(FontOptions(13.f)));k->label.setColour(Label::textColourId,bounds.getY()>395 && bounds.getY()<610?light:ink);
     k->slider.setSliderStyle(style);k->slider.setTextBoxStyle(Slider::TextBoxBelow,false,bounds.getWidth()-8,17);k->slider.setTooltip(tip);k->slider.setRotaryParameters(MathConstants<float>::pi*1.22f,MathConstants<float>::pi*2.78f,true);
+    k->slider.setColour(Slider::textBoxBackgroundColourId,ink);k->slider.setColour(Slider::textBoxOutlineColourId,Colours::transparentBlack);k->slider.setColour(Slider::textBoxTextColourId,light);
     k->slider.setPopupDisplayEnabled(false,false,this);addAndMakeVisible(k->label);addAndMakeVisible(k->slider);k->attachment=std::make_unique<SA>(processor.state,id,k->slider);knobs.push_back(std::move(k));
 }
 void SishhinEditor::toggle(const char* id,const char* name,Rectangle<int> bounds){auto s=std::make_unique<Switch>();s->bounds=bounds;s->button.setButtonText(name);s->button.getProperties().set("header",bounds.getHeight()>=27);addAndMakeVisible(s->button);s->attachment=std::make_unique<BA>(processor.state,id,s->button);switches.push_back(std::move(s));}

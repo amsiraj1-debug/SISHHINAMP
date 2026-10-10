@@ -23,6 +23,20 @@ try{
     for(int pass=0;pass<40;++pass){signal(b,48000,pass*512);p->processBlock(b,midi);note=p->tunerText();}check(note.startsWith("A2"),"Tuner failed 110 Hz");
     p->captureTone();for(int pass=0;pass<290;++pass){signal(b,48000,pass*512);p->processBlock(b,midi);}check(p->profileReady.load(),"Tone capture did not complete");
     p->calibrate();for(int pass=0;pass<290;++pass){signal(b,48000,pass*512);p->processBlock(b,midi);}float gain;check(p->takeCalibration(gain)&&gain<1000,"Auto gain failed");
-    std::cout<<"PASS: presets, finite output, mono/stereo, 44.1/48/96k, oversized blocks, bypass, tuner/mute, state, tone lock, capture, calibration\n";
+    // A custom IR must survive recall without the original file and sample-rate changes.
+    TemporaryFile temp(".wav");WavAudioFormat wav;{
+        auto stream=temp.getFile().createOutputStream();check(stream!=nullptr,"IR file stream");
+        std::unique_ptr<AudioFormatWriter> writer(wav.createWriterFor(stream.get(),48000,2,24,{},0));check(writer!=nullptr,"IR writer");stream.release();
+        AudioBuffer<float> ir(2,1024);ir.clear();ir.setSample(0,0,.9f);ir.setSample(1,3,.8f);ir.setSample(0,43,-.3f);check(writer->writeFromAudioSampleBuffer(ir,0,1024),"IR write");
+    }
+    check(p->loadIR(temp.getFile()).wasOk(),"IR import");MemoryBlock irState;p->getStateInformation(irState);check(irState.getSize()>6000,"IR not embedded");
+    auto recalled=std::make_unique<SishhinProcessor>();recalled->setStateInformation(irState.getData(),static_cast<int>(irState.getSize()));check(recalled->value("cab")==4,"Custom cabinet not recalled");
+    temp.getFile().deleteFile();recalled->prepareToPlay(96000,256);signal(b,96000);recalled->processBlock(b,midi);check(std::isfinite(b.getMagnitude(0,b.getNumSamples())),"Recalled IR output");
+    check(p->loadIR(temp.getFile()).failed(),"Missing IR accepted");
+    // A +12 semitone voice should double a sustained test tone's frequency.
+    sishhin::Pitch shifter;int crossings=0;float previous=0;
+    for(int i=0;i<96000;++i){float v=shifter.tick(.2f*std::sin(static_cast<float>(i*MathConstants<double>::twoPi*220/48000)),12,48000);if(i>=48000 && previous<=0 && v>0)++crossings;previous=v;}
+    check(std::abs(crossings-440)<15,"Octave pitch frequency");
+    std::cout<<"PASS: presets, finite output, mono/stereo, 44.1/48/96k, oversized blocks, bypass, tuner/mute, state, tone lock, capture, calibration, embedded stereo IR recall and octave pitch\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<"FAIL: "<<e.what()<<std::endl;return 1;}}

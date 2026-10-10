@@ -28,7 +28,7 @@ Parallel routes the sub voice through its own character, amplifier and EQ chain 
 | Amplifier | Multistage high-gain saturation, Drive, Low, Mid, High, Presence, mono/stereo |
 | Cabinet | Four original synthetic cabinet FIRs: Obsidian, Iron, Ruin and Monolith; custom mono/stereo WAV or AIFF IR up to two seconds; embedded IR recall |
 | Output | Low/high cuts with endpoint-off settings, lo-fi band limiting, output trim and peak meter, global bypass |
-| Tuner | Autocorrelation note/octave/cents/Hz display with optional mute; suitable for individual notes down to approximately 30 Hz |
+| Tuner | Autocorrelation note/octave/cents/Hz display and moving strobe strip with optional mute; suitable for individual notes down to approximately 30 Hz |
 | Presets | Six original factory sounds, save/open `.sishhin` files, host session recall; presets embed custom IR and match data |
 | Host | Parameter automation, mono, stereo and mono-to-stereo buses; VST3 and standalone |
 
@@ -65,7 +65,7 @@ The GitHub Actions workflow performs the same build, runs offline DSP regression
 
 ## Verification and limitations
 
-Offline checks cover finite/bounded and non-silent audio across six presets, mono/stereo at 44.1/48/96 kHz, oversized host blocks, bypass, tuner mute, note detection, state recall, tone lock, tone capture and auto gain. These checks do not constitute listening tests or validation in every DAW. Test the plugin in your preferred DAW before relying on it in a live or paid session.
+Offline checks cover finite/bounded and non-silent audio across six presets, mono/stereo at 44.1/48/96 kHz, oversized host blocks, bypass, tuner mute, note detection, state recall, tone lock, tone capture, auto gain, embedded stereo IR recall after the source file is removed, sample-rate changes and octave pitch frequency. These checks do not constitute listening tests or validation in every DAW. Test the plugin in your preferred DAW before relying on it in a live or paid session.
 
 Windows VST3 and standalone are the supported deliverables. AU, AAX, macOS binaries and original artist preset packs are not supplied. Stock IRs are synthetic resonant filters, not recovered recordings of physical cabinets. No binary patching, activation bypass, proprietary DSP extraction or copying of the supplied plugin's embedded assets is performed.
 
