@@ -1,132 +1,141 @@
 #include "PluginEditor.h"
 using namespace juce;
-namespace {const Colour paper{0xffb6b3a7},ink{0xff242323},red{0xffa32322},light{0xffe3dfd1};
-void text(Graphics& g,const String& s,Rectangle<int> r,float size,Colour c,Justification j=Justification::centred){g.setColour(c);g.setFont(Font(FontOptions(size)));g.drawText(s,r,j);}
+namespace {
+const Colour bg{0xff090d12},panel{0xff121920},border{0xff26323c},muted{0xff8496a4},white{0xffe6eef3},accent{0xff65e4cb},lime{0xffd3ed86};
+void text(Graphics& g,const String& s,Rectangle<int> r,float size,Colour c,Justification j=Justification::centred,bool bold=false){g.setColour(c);Font font{FontOptions(size)};font.setBold(bold);g.setFont(font);g.drawText(s,r,j);}
+void card(Graphics& g,Rectangle<float> r){g.setColour(Colour(0x66000000));g.fillRoundedRectangle(r.translated(0,3),13);g.setColour(panel);g.fillRoundedRectangle(r,12);g.setColour(border);g.drawRoundedRectangle(r,12,1);}
 }
-MetalLook::MetalLook(){setColour(Slider::textBoxTextColourId,light);setColour(Slider::textBoxBackgroundColourId,ink);setColour(Slider::textBoxOutlineColourId,Colours::transparentBlack);setColour(ComboBox::backgroundColourId,ink);setColour(ComboBox::textColourId,light);setColour(ComboBox::outlineColourId,Colour(0xff55514b));setColour(PopupMenu::backgroundColourId,ink);setColour(PopupMenu::textColourId,light);setColour(TextButton::textColourOffId,light);}
-void MetalLook::drawRotarySlider(Graphics& g,int x,int y,int w,int h,float pos,float start,float end,Slider& slider){
-    const float size=static_cast<float>(jmin(w,h))-12,rad=size*.5f,cx=x+w*.5f,cy=y+h*.5f;
-    g.setColour(Colour(0x70000000));g.fillEllipse(cx-rad-2,cy-rad+3,size+4,size+4);
-    g.setColour(ink);g.fillEllipse(cx-rad-1,cy-rad-1,size+2,size+2);
-    Path arc;arc.addCentredArc(cx,cy,rad+4,rad+4,0,start,start+pos*(end-start),true);g.setColour(red);g.strokePath(arc,PathStrokeType(3));
-    g.setGradientFill(ColourGradient(light,cx-rad,cy-rad,Colour(0xff66635a),cx+rad,cy+rad,false));g.fillEllipse(cx-rad,cy-rad,size,size);
-    for(int i=0;i<24;++i){float a=i*MathConstants<float>::twoPi/24;g.setColour(i%2?Colour(0xffd4cfbd):Colour(0xff4d4a43));g.drawLine(cx+std::sin(a)*(rad-4),cy+std::cos(a)*(rad-4),cx+std::sin(a)*rad,cy+std::cos(a)*rad,2);}
-    g.setColour(Colour(0xff5a584f));g.drawEllipse(cx-rad+6,cy-rad+6,size-12,size-12,1);
-    float a=start+pos*(end-start);g.setColour(Colour(0xff252423));g.drawLine(cx+std::sin(a)*rad*.45f,cy-std::cos(a)*rad*.45f,cx+std::sin(a)*rad*.83f,cy-std::cos(a)*rad*.83f,3);
-    if(!slider.isEnabled()){g.setColour(Colour(0x669a998f));g.fillEllipse(cx-rad,cy-rad,size,size);}
+ModernLook::ModernLook(){
+    setColour(ComboBox::backgroundColourId,Colour(0xff1b252e));setColour(ComboBox::textColourId,white);setColour(ComboBox::outlineColourId,border);setColour(ComboBox::arrowColourId,accent);
+    setColour(PopupMenu::backgroundColourId,panel);setColour(PopupMenu::textColourId,white);setColour(PopupMenu::highlightedBackgroundColourId,Colour(0xff245044));setColour(PopupMenu::highlightedTextColourId,white);
+    setColour(TextButton::textColourOffId,white);setColour(TextButton::textColourOnId,accent);setColour(TooltipWindow::backgroundColourId,panel);setColour(TooltipWindow::textColourId,white);
 }
-void MetalLook::drawButtonBackground(Graphics& g,Button& b,const Colour&,bool hover,bool down){auto r=b.getLocalBounds().toFloat().reduced(.5f);g.setGradientFill(ColourGradient(Colour(hover?0xff50443b:0xff393633),0,0,Colour(down?0xff6d1d1b:0xff121313),0,r.getHeight(),false));g.fillRoundedRectangle(r,3);g.setColour(Colour(0xff665e51));g.drawRoundedRectangle(r,3,1);}
-void MetalLook::drawLinearSlider(Graphics& g,int x,int y,int w,int h,float pos,float,float,Slider::SliderStyle style,Slider&){
-    const bool vertical=style==Slider::LinearVertical;float cx=x+w*.5f,cy=y+h*.5f;
-    g.setColour(ink);if(vertical)g.fillRoundedRectangle(cx-3,static_cast<float>(y),6,static_cast<float>(h),2);else g.fillRoundedRectangle(static_cast<float>(x),cy-2,static_cast<float>(w),4,2);
-    Rectangle<float> thumb=vertical?Rectangle<float>(cx-8,pos-15,16,30):Rectangle<float>(pos-13,cy-6,26,12);
-    g.setColour(Colour(0x55000000));g.fillRect(thumb.translated(2,3));g.setGradientFill(ColourGradient(light,thumb.getX(),thumb.getY(),Colour(0xff4d4b45),thumb.getRight(),thumb.getBottom(),false));g.fillRoundedRectangle(thumb,2);g.setColour(ink);g.drawRoundedRectangle(thumb,2,1);
-    if(vertical)g.drawHorizontalLine(roundToInt(pos),cx-6,cx+6);else g.drawVerticalLine(roundToInt(pos),cy-4,cy+4);
+void ModernLook::drawRotarySlider(Graphics& g,int x,int y,int w,int h,float pos,float start,float end,Slider& s){
+    const float size=static_cast<float>(jmin(w,h))-18,rad=size*.5f,cx=x+w*.5f,cy=y+h*.5f;const bool big=size>105;
+    Path base;base.addCentredArc(cx,cy,rad+5,rad+5,0,start,end,true);g.setColour(border.brighter(.12f));g.strokePath(base,PathStrokeType(big?5.f:3.f,PathStrokeType::curved,PathStrokeType::rounded));
+    Path arc;arc.addCentredArc(cx,cy,rad+5,rad+5,0,start,start+pos*(end-start),true);g.setColour(big?lime:accent);g.strokePath(arc,PathStrokeType(big?5.f:3.f,PathStrokeType::curved,PathStrokeType::rounded));
+    g.setColour(Colour(0x99000000));g.fillEllipse(cx-rad,cy-rad+4,size,size);
+    g.setGradientFill(ColourGradient(Colour(0xff2e3c47),cx-rad,cy-rad,Colour(0xff121a22),cx+rad,cy+rad,false));g.fillEllipse(cx-rad,cy-rad,size,size);
+    g.setColour(Colour(0xff394b58));g.drawEllipse(cx-rad+.5f,cy-rad+.5f,size-1,size-1,1);
+    if(big){g.setColour(Colour(0xff1e2a33));g.drawEllipse(cx-rad+12,cy-rad+12,size-24,size-24,1);text(g,"GAIN",{roundToInt(cx)-30,roundToInt(cy)-9,60,18},11,muted);}
+    const float angle=start+pos*(end-start);g.setColour(white);g.drawLine(cx+std::sin(angle)*rad*.63f,cy-std::cos(angle)*rad*.63f,cx+std::sin(angle)*rad*.86f,cy-std::cos(angle)*rad*.86f,big?3.f:2.f);
+    if(!s.isEnabled()){g.setColour(bg.withAlpha(.6f));g.fillEllipse(cx-rad-8,cy-rad-8,size+16,size+16);}
 }
-void MetalLook::drawToggleButton(Graphics& g,ToggleButton& b,bool hover,bool){auto r=b.getLocalBounds();const bool header=b.getProperties().getWithDefault("header",false);if(header)drawButtonBackground(g,b,ink,hover,false);
-    const float cy=r.getHeight()*.5f;g.setColour(Colour(0xff302925));g.fillEllipse(7,cy-5,10,10);if(b.getToggleState()){g.setColour(Colour(0x559f1717));g.fillEllipse(3,cy-9,18,18);g.setColour(Colour(0xffff4c42));g.fillEllipse(9,cy-3,6,6);}else{g.setColour(Colour(0xff111111));g.fillEllipse(9,cy-3,6,6);}
-    text(g,b.getButtonText(),r.withTrimmedLeft(23),header?14.f:12.f,header || b.getY()>730?light:ink,Justification::centredLeft);
+void ModernLook::drawLinearSlider(Graphics& g,int x,int y,int w,int h,float pos,float,float,Slider::SliderStyle style,Slider&){
+    bool vertical=style==Slider::LinearVertical;float cx=x+w*.5f,cy=y+h*.5f;g.setColour(Colour(0xff070b10));
+    if(vertical){g.fillRoundedRectangle(cx-3,static_cast<float>(y),6,static_cast<float>(h),3);g.setColour(accent.withAlpha(.3f));g.fillRoundedRectangle(cx-2,pos,4,y+h-pos,2);}
+    else {g.fillRoundedRectangle(static_cast<float>(x),cy-2,static_cast<float>(w),4,2);g.setColour(accent.withAlpha(.5f));g.fillRoundedRectangle(static_cast<float>(x),cy-2,jmax(0.f,pos-x),4,2);}
+    g.setColour(white);if(vertical){g.fillRoundedRectangle(cx-9,pos-7,18,14,3);g.setColour(bg);g.drawHorizontalLine(roundToInt(pos),cx-5,cx+5);}else g.fillEllipse(pos-5,cy-5,10,10);
 }
-void SishhinEditor::knob(const char* id,const char* name,Rectangle<int> bounds,const String& tip,Slider::SliderStyle style){
-    auto k=std::make_unique<Knob>();k->bounds=bounds;k->label.setText(name,dontSendNotification);k->label.setJustificationType(Justification::centred);k->label.setFont(Font(FontOptions(13.f)));k->label.setColour(Label::textColourId,bounds.getY()>395 && bounds.getY()<610?light:ink);
-    k->slider.setSliderStyle(style);k->slider.setTextBoxStyle(Slider::TextBoxBelow,false,bounds.getWidth()-8,17);k->slider.setTooltip(tip);k->slider.setRotaryParameters(MathConstants<float>::pi*1.22f,MathConstants<float>::pi*2.78f,true);
-    k->slider.setColour(Slider::textBoxBackgroundColourId,ink);k->slider.setColour(Slider::textBoxOutlineColourId,Colours::transparentBlack);k->slider.setColour(Slider::textBoxTextColourId,light);
-    k->slider.setPopupDisplayEnabled(false,false,this);addAndMakeVisible(k->label);addAndMakeVisible(k->slider);k->attachment=std::make_unique<SA>(processor.state,id,k->slider);knobs.push_back(std::move(k));
+void ModernLook::drawButtonBackground(Graphics& g,Button& b,const Colour&,bool hover,bool down){
+    auto r=b.getLocalBounds().toFloat().reduced(.5f);const bool selected=b.getToggleState();g.setColour(selected?accent.withAlpha(.15f):hover?Colour(0xff263740):Colour(0xff1a242d));if(down)g.setColour(Colour(0xff315049));g.fillRoundedRectangle(r,6);g.setColour(selected?accent.withAlpha(.6f):border);g.drawRoundedRectangle(r,6,1);
 }
-void SishhinEditor::toggle(const char* id,const char* name,Rectangle<int> bounds){auto s=std::make_unique<Switch>();s->bounds=bounds;s->button.setButtonText(name);s->button.getProperties().set("header",bounds.getHeight()>=27);addAndMakeVisible(s->button);s->attachment=std::make_unique<BA>(processor.state,id,s->button);switches.push_back(std::move(s));}
-void SishhinEditor::choice(const char* id,StringArray items,Rectangle<int> bounds){auto c=std::make_unique<Choice>();c->bounds=bounds;c->box.addItemList(items,1);c->box.setJustificationType(Justification::centred);addAndMakeVisible(c->box);c->attachment=std::make_unique<CA>(processor.state,id,c->box);choices.push_back(std::move(c));}
+void ModernLook::drawToggleButton(Graphics& g,ToggleButton& b,bool hover,bool){
+    auto r=b.getLocalBounds();const bool on=b.getToggleState();g.setColour(on?accent.withAlpha(.07f):Colour(0xff171f27));g.fillRoundedRectangle(r.toFloat(),5);if(hover){g.setColour(border);g.drawRoundedRectangle(r.toFloat().reduced(.5f),5,1);}
+    float cy=r.getHeight()*.5f;g.setColour(on?accent:Colour(0xff52626d));g.fillEllipse(10,cy-3,6,6);text(g,b.getButtonText(),r.withTrimmedLeft(24),11,on?white:muted,Justification::centredLeft,true);
+}
+void SishhinEditor::knob(const char* id,const char* name,Rectangle<int> bounds,const String& tip,int section,Slider::SliderStyle style){
+    auto k=std::make_unique<Knob>();k->bounds=bounds;k->page=section;k->label.setText(name,dontSendNotification);k->label.setJustificationType(Justification::centred);k->label.setFont(Font(FontOptions(11.f)));k->label.setColour(Label::textColourId,muted);
+    k->slider.setSliderStyle(style);k->slider.setTextBoxStyle(Slider::TextBoxBelow,false,jmin(bounds.getWidth()-8,100),20);k->slider.setTooltip(tip);k->slider.setRotaryParameters(MathConstants<float>::pi*1.22f,MathConstants<float>::pi*2.78f,true);
+    k->slider.setColour(Slider::textBoxBackgroundColourId,Colour(0xff0e141a));k->slider.setColour(Slider::textBoxOutlineColourId,Colours::transparentBlack);k->slider.setColour(Slider::textBoxTextColourId,white);
+    addAndMakeVisible(k->label);addAndMakeVisible(k->slider);k->attachment=std::make_unique<SA>(processor.state,id,k->slider);knobs.push_back(std::move(k));
+}
+void SishhinEditor::toggle(const char* id,const char* name,Rectangle<int> bounds,int section,const String& tip){auto s=std::make_unique<Switch>();s->bounds=bounds;s->page=section;s->button.setButtonText(name);s->button.setTooltip(tip);addAndMakeVisible(s->button);s->attachment=std::make_unique<BA>(processor.state,id,s->button);switches.push_back(std::move(s));}
+void SishhinEditor::choice(const char* id,StringArray items,Rectangle<int> bounds,int section){auto c=std::make_unique<Choice>();c->bounds=bounds;c->page=section;c->box.addItemList(items,1);c->box.setJustificationType(Justification::centred);addAndMakeVisible(c->box);c->attachment=std::make_unique<CA>(processor.state,id,c->box);choices.push_back(std::move(c));}
 SishhinEditor::SishhinEditor(SishhinProcessor& p):AudioProcessorEditor(p),processor(p){
-    setLookAndFeel(&look);setSize(1060,780);
-    knob("gate","GATE",{12,80,66,95},"Noise gate threshold in dB. -80 disables the gate.");
-    knob("input","INPUT",{13,205,64,420},"Input trim in dB. Play hard for three seconds when using Auto Gain.",Slider::LinearVertical);
-    knob("output","OUTPUT",{983,205,64,420},"Output trim in dB. The red meter warns at 0 dBFS.",Slider::LinearVertical);
-    toggle("toneOn","TONE MATCH",{138,76,185,28});
-    toggle("toneLock","LOCK",{251,347,92,22});
-    knob("amount","AMOUNT",{120,223,93,108},"Amount of the captured ten-band spectral correction.");knob("smooth","SMOOTH",{252,223,93,108},"Smooths the correction across neighbouring frequency bands.");
-    toggle("characterOn","CHARACTER",{438,76,185,28});
-    knob("distortion","DISTORTION",{396,111,80,103},"Intensity of the selected character distortion.");knob("tone","TONE",{489,111,80,103},"Character low-pass tone filter.");knob("colour","COLOUR",{582,111,80,103},"Character weight and asymmetric saturation.");
-    choice("engine",{"RAZOR / cutting","MIRE / thick fuzz","RELIC / octave fuzz","MAUL / growl"},{407,223,243,24});
-    choice("speed",{"1/4","1/8","1/16","1/32","1/8 dotted","1/16 dotted","1/8 triplet","1/16 triplet"},{400,292,99,23});
-    toggle("stutterOn","STUTTER",{400,258,98,22});toggle("tighten","TIGHTEN",{400,330,98,22});
-    knob("depth","DEPTH",{574,255,80,100},"Rhythmic gate depth. Syncs to host tempo and transport.");
-    knob("makeup","LEVEL dB",{502,255,70,100},"Character output makeup gain.");
-    toggle("pitchOn","PITCH",{734,76,185,28});
-    knob("whammy","WHAMMY",{697,112,89,106},"Pitch shift from -24 to +12 semitones. Automatable.");knob("dissonance","DISSONANCE",{871,112,89,106},"Blend a voice shifted one semitone upward.");
-    toggle("cleanse","CLEANSE",{787,164,87,22});switches.back()->button.setTooltip("Suppress the sub-octave while Whammy moves away from zero.");
-    knob("thicken","THICKEN",{697,253,89,102},"Sub-octave blend. Supports chords using overlapping delay grains.");knob("subCut","HI CUT Hz",{871,253,89,102},"Low-pass cutoff for the sub-octave voice.");
-    choice("octave",{"OCT -1","OCT -2"},{790,261,77,23});toggle("parallel","PARALLEL",{787,308,90,22});switches.back()->button.setTooltip("Run the sub-octave through a separate oversampled character and amplifier chain.");
-    toggle("ampOn","AMPLIFIER",{438,393,185,28});
-    knob("low","LOW",{221,506,92,112},"Amplifier low band gain in dB.");knob("mid","MID",{340,458,90,112},"Amplifier mid band gain in dB.");
-    knob("drive","DRIVE",{455,441,150,167},"Four-times oversampled multistage high-gain saturation.");
-    knob("high","HIGH",{630,458,90,112},"Amplifier high band gain in dB.");knob("presence","PRESENCE",{749,506,92,112},"Amplifier presence band gain in dB.");
-    toggle("stereo","STEREO",{483,618,95,28});
-    toggle("cabOn","CAB IR",{449,660,165,28});choice("cab",{"Obsidian 4x12","Iron 4x12","Ruin 2x12","Monolith 4x12","Custom WAV"},{402,699,260,25});
-    knob("lowCut","LOW CUT Hz",{110,653,200,75},"Post-cab low cut. 20 Hz disables it.",Slider::LinearHorizontal);
-    knob("highCut","HIGH CUT Hz",{750,653,200,75},"Post-cab high cut. 20000 Hz disables it.",Slider::LinearHorizontal);
-    toggle("lofi","LO-FI",{980,666,76,28});toggle("bypass","BYPASS",{12,28,85,28});toggle("tuner","TUNER",{866,20,96,28});
-    toggle("tunerMute","MUTE",{888,736,77,22});knob("tempo","BPM",{979,82,75,95},"Fallback tempo when the host supplies none.");
-    presets.addItemList({"01  Obsidian Djent","02  Serrated Rhythm","03  Abyssal Thall","04  Mire Fuzz","05  Fracture Machine","06  Singing Steel"},1);presets.setSelectedId(1,dontSendNotification);presets.onChange=[this]{processor.factoryPreset(presets.getSelectedId()-1);status.setText("Factory preset loaded",dontSendNotification);};
-    for(Component* c:std::initializer_list<Component*>{&listen,&reference,&autoGain,&loadIR,&save,&load,&about,&presets,&status,&tunerLabel})addAndMakeVisible(c);
-    listen.onClick=[this]{processor.captureTone();processor.set("toneOn",1);status.setText("Play your DI guitar for three seconds...",dontSendNotification);};
+    setLookAndFeel(&look);setSize(1200,830);
+    toggle("bypass","BYPASS",{32,117,146,28},-1,"When lit, the full effect is bypassed.");
+    knob("gate","NOISE GATE / dB",{52,160,105,113},"Threshold for the input noise gate. -80 dB disables gating.");
+    knob("input","INPUT",{34,356,60,343},"Input trim in dB. Use Calibrate while playing a loud riff.",-1,Slider::LinearVertical);
+    knob("output","OUTPUT",{116,356,60,343},"Final output trim in dB.",-1,Slider::LinearVertical);
+    knob("tempo","FALLBACK BPM",{35,714,141,63},"Tempo used when your host does not provide one.",-1,Slider::LinearHorizontal);
+    toggle("ampOn","AMPLIFIER",{229,116,144,28});toggle("stereo","STEREO",{814,116,114,28});
+    knob("drive","DRIVE",{244,176,146,189},"Four-times oversampled, dynamically biased high-gain amplifier.");
+    knob("low","LOW",{421,208,102,112},"Low-mid weight at 130 Hz.");knob("mid","MID",{548,208,102,112},"Midrange focus at 850 Hz.");knob("high","HIGH",{675,208,102,112},"Pick definition at 3 kHz.");knob("presence","PRESENCE",{802,208,102,112},"Upper harmonics at 6.2 kHz.");
+    knob("tight","LOW END FOCUS",{427,337,136,67},"Controls the pre-distortion bass cutoff from 32 to 187 Hz for tighter extended-range riffs.",-1,Slider::LinearHorizontal);
+    knob("attack","PICK ATTACK",{594,337,136,67},"Transient emphasis before saturation. Adds pick definition without a permanent treble boost.",-1,Slider::LinearHorizontal);
+    knob("sag","POWER SAG",{761,337,136,67},"Envelope-dependent power-stage compression. Low values stay rigid; high values bloom.",-1,Slider::LinearHorizontal);
+    toggle("characterOn","CHARACTER",{230,508,160,28},0);
+    choice("engine",{"RAZOR / focused drive","MIRE / dense fuzz","RELIC / octave fracture","MAUL / asymmetric weight"},{410,508,280,28},0);
+    knob("distortion","DISTORTION",{234,562,100,127},"Character-stage intensity.",0);knob("tone","TONE",{352,562,100,127},"Character-stage upper-frequency contour.",0);
+    knob("colour","COLOUR",{470,562,100,127},"Character weight and asymmetry.",0);knob("makeup","MAKEUP / dB",{588,562,100,127},"Character-stage gain compensation.",0);
+    toggle("stutterOn","STUTTER",{722,508,201,28},0);choice("speed",{"1/4","1/8","1/16","1/32","1/8 dotted","1/16 dotted","1/8 triplet","1/16 triplet"},{722,551,201,28},0);
+    knob("depth","STUTTER DEPTH",{773,591,100,113},"Tempo-synced rhythmic gate depth. Delay and reverb tails continue after the gate.",0);toggle("tighten","SHORT GATE",{722,724,201,27},0,"Tighter rhythmic duty cycle for machine-like cuts.");
+    toggle("pitchOn","PITCH MATRIX",{232,508,170,28},1);
+    knob("whammy","WHAMMY / st",{241,565,115,138},"Continuous pitch shifting between -24 and +12 semitones.",1);knob("dissonance","DISSONANCE",{411,565,115,138},"Adds an independent semitone-up layer.",1);
+    knob("thicken","SUB WEIGHT",{581,565,115,138},"Sub-octave blend. At 100%, the unshifted main voice is removed.",1);knob("subCut","SUB CUT / Hz",{751,565,115,138},"Sub-octave low-pass filter.",1);
+    toggle("cleanse","CLEANSE",{241,725,133,28},1,"Suppress the sub layer while Whammy moves away from zero.");choice("octave",{"ONE OCTAVE DOWN","TWO OCTAVES DOWN"},{459,725,230,28},1);toggle("parallel","PARALLEL AMP",{753,725,156,28},1,"Run the sub voice through a separate character and amp chain.");
+    toggle("toneOn","SPECTRAL MATCH",{232,508,178,28},2);toggle("toneLock","LOCK INPUT + MATCH",{430,508,212,28},2,"Protect input and matching settings when changing factory presets.");
+    knob("amount","MATCH AMOUNT",{548,564,133,142},"Strength of the captured ten-band spectral correction.",2);knob("smooth","SPECTRAL SMOOTH",{740,564,133,142},"Smooth the correction across neighbouring frequency bands.",2);
+    toggle("cabOn","CABINET",{232,508,144,28},3);choice("cab",{"Obsidian 4x12","Iron 4x12","Ruin 2x12","Monolith 4x12","Custom WAV / AIFF"},{410,508,310,28},3);
+    knob("lowCut","LOW CUT / Hz",{249,577,262,88},"Post-cabinet low cut. 20 Hz disables this filter.",3,Slider::LinearHorizontal);knob("highCut","HIGH CUT / Hz",{620,577,262,88},"Post-cabinet high cut. 20000 Hz disables this filter.",3,Slider::LinearHorizontal);
+    toggle("delayOn","TEMPO DELAY",{983,150,183,28});knob("delayMix","MIX",{981,195,91,111},"Tempo delay wet level.");knob("feedback","FEEDBACK",{1081,195,91,111},"Feedback amount; stereo mode cross-feeds the echoes.");choice("delayDivision",{"1/4 NOTE","1/8 NOTE","1/8 DOTTED","1/4 TRIPLET","1/2 NOTE"},{985,321,181,28});
+    toggle("reverbOn","DIFFUSE REVERB",{983,383,183,28});knob("reverbMix","MIX",{981,426,91,111},"Reverb blend after the amp and cabinet.");knob("reverbSize","SIZE",{1081,426,91,111},"Reverb room size and decay character.");
+    knob("duck","DUCKING",{981,587,91,111},"Reduce ambience under loud attacks so palm-muted riffs remain clear.");knob("spaceTone","TONE / Hz",{1081,587,91,111},"Low-pass filtering for delay feedback and ambience.");toggle("lofi","LO-FI FILTER",{989,741,173,28});
+    toggle("tuner","TUNER",{1004,28,117,30});toggle("tunerMute","MUTE",{1075,73,87,22});
+    presets.addItemList(SishhinProcessor::presetNames(),1);displayedPreset=processor.getCurrentProgram();presets.setSelectedId(displayedPreset+1,dontSendNotification);
+    presets.onChange=[this]{displayedPreset=presets.getSelectedId()-1;processor.factoryPreset(displayedPreset);status.setText("Loaded "+SishhinProcessor::presetNames()[displayedPreset],dontSendNotification);};
+    previous.onClick=[this]{presets.setSelectedId((presets.getSelectedId()+processor.getNumPrograms()-2)%processor.getNumPrograms()+1);};next.onClick=[this]{presets.setSelectedId(presets.getSelectedId()%processor.getNumPrograms()+1);};
+    for(Component* c:std::initializer_list<Component*>{&listen,&reference,&autoGain,&loadIR,&save,&load,&about,&previous,&next,&presets,&status,&tunerLabel})addAndMakeVisible(c);
+    const char* names[]{"01   CHARACTER","02   PITCH MATRIX","03   SPECTRAL MATCH","04   CABINET"};for(int i=0;i<4;++i){tabs[i].setButtonText(names[i]);tabs[i].onClick=[this,i]{showPage(i);};addAndMakeVisible(tabs[i]);}
+    listen.onClick=[this]{processor.captureTone();processor.set("toneOn",1);status.setText("CAPTURE: play representative guitar input for three seconds.",dontSendNotification);};
     reference.onClick=[this]{chooseFile(0);};loadIR.onClick=[this]{chooseFile(1);};save.onClick=[this]{chooseFile(2);};load.onClick=[this]{chooseFile(3);};
-    autoGain.onClick=[this]{processor.calibrate();autoTicks=95;status.setText("Play your loudest riff for three seconds...",dontSendNotification);};
-    about.onClick=[this]{AlertWindow::showMessageBoxAsync(MessageBoxIconType::InfoIcon,"SISHHIN AMP 1.0","Free djent amplifier. No activation.\n\nTone match: load an isolated reference, then capture three seconds of DI. Without a reference the target is a flat ten-band spectrum.\n\nPitch uses dual-grain shifting; large shifts smear transients. Cabinet presets are original synthetic FIRs. Import WAV IRs up to two seconds.\n\nDouble-click a knob to reset. All sound controls are host-automatable. Save/Open includes tone profile and custom IR.\n\nNo factory sounds or DSP were extracted from Slam Amp.");};
-    status.setColour(Label::textColourId,light);status.setFont(Font(FontOptions(12.f)));status.setText("SISHHIN AUDIO  /  DJENT · THALL · EXTENDED RANGE",dontSendNotification);
-    tunerLabel.setColour(Label::textColourId,light);tunerLabel.setFont(Font(FontOptions(12.f)));tunerLabel.setJustificationType(Justification::centredRight);
-    listen.setTooltip("Capture the spectrum of three seconds of live DI, then compute the correction toward the target.");reference.setTooltip("Load an isolated guitar WAV/AIFF reference, analysed over up to 30 seconds.");loadIR.setTooltip("Import a WAV/AIFF cabinet IR; the audio is embedded in your session and presets.");
-    resized();startTimerHz(30);
+    autoGain.onClick=[this]{processor.calibrate();autoTicks=95;status.setText("CALIBRATION: play your loudest riff for three seconds.",dontSendNotification);};
+    about.onClick=[]{AlertWindow::showMessageBoxAsync(MessageBoxIconType::InfoIcon,"SISHHIN AMP 1.1 / THALL ENGINE","28 original presets. Four-times oversampled amplifier and character stages. Independent sub amplifier. Spectral input matching. Tempo delay and ducked reverb.\n\nUse the four lower tabs to access Character, Pitch, Match and Cabinet. All sound controls are host-automatable. Double-click controls to reset.\n\nSave/Open embeds the custom IR and spectral profile. Pitch uses dual-grain shifting; extreme shifts can smear attacks. Import cabinet WAV/AIFF files up to two seconds.\n\nFree and open source. No account, activation or online check.");};
+    status.setColour(Label::textColourId,muted);status.setFont(Font(FontOptions(11.f)));status.setText("SISHHIN AUDIO   /   THALL ENGINE 1.1   /   28 ORIGINAL PRESETS",dontSendNotification);
+    tunerLabel.setColour(Label::textColourId,accent);tunerLabel.setFont(Font(FontOptions(12.f)));tunerLabel.setJustificationType(Justification::centred);
+    reference.setTooltip("Load an isolated reference guitar WAV or AIFF, then capture your input.");listen.setTooltip("Capture three seconds of input and compute a ten-band correction toward the reference.");loadIR.setTooltip("Import a mono or stereo cabinet IR. It is embedded in presets and sessions.");
+    resized();showPage(0);startTimerHz(30);
 }
 SishhinEditor::~SishhinEditor(){stopTimer();setLookAndFeel(nullptr);}
 void SishhinEditor::resized(){
-    for(auto& k:knobs){auto r=k->bounds;k->label.setBounds(r.removeFromTop(20));k->slider.setBounds(r);}
-    for(auto& s:switches)s->button.setBounds(s->bounds);for(auto& c:choices)c->box.setBounds(c->bounds);
-    presets.setBounds(339,19,324,28);save.setBounds(679,19,66,28);load.setBounds(753,19,66,28);about.setBounds(1014,20,28,28);
-    reference.setBounds(124,124,220,27);listen.setBounds(124,163,220,49);autoGain.setBounds(7,663,77,30);loadIR.setBounds(674,700,65,25);
-    status.setBounds(102,737,560,28);tunerLabel.setBounds(605,737,278,28);
+    for(auto& k:knobs){auto r=k->bounds;k->label.setBounds(r.removeFromTop(20));k->slider.setBounds(r);}for(auto& s:switches)s->button.setBounds(s->bounds);for(auto& c:choices)c->box.setBounds(c->bounds);
+    presets.setBounds(370,26,420,34);previous.setBounds(327,26,31,34);next.setBounds(800,26,31,34);save.setBounds(849,28,66,30);load.setBounds(923,28,66,30);about.setBounds(1142,28,34,30);
+    for(int i=0;i<4;++i)tabs[i].setBounds(228+i*177,454,167,32);
+    reference.setBounds(240,565,251,36);listen.setBounds(240,615,251,48);loadIR.setBounds(745,508,177,28);autoGain.setBounds(33,289,144,30);
+    status.setBounds(24,802,1150,21);tunerLabel.setBounds(340,73,647,22);
 }
+void SishhinEditor::showPage(int index){page=jlimit(0,3,index);for(auto& k:knobs){bool show=k->page<0 || k->page==page;k->slider.setVisible(show);k->label.setVisible(show);}for(auto& s:switches)s->button.setVisible(s->page<0 || s->page==page);for(auto& c:choices)c->box.setVisible(c->page<0 || c->page==page);
+    reference.setVisible(page==2);listen.setVisible(page==2);loadIR.setVisible(page==3);for(int i=0;i<4;++i)tabs[i].setToggleState(page==i,dontSendNotification);repaint();}
 void SishhinEditor::paint(Graphics& g){
-    g.fillAll(ink);g.setGradientFill(ColourGradient(Colour(0xff2e3030),0,0,Colour(0xff111313),0,65,false));g.fillRect(0,0,1060,66);
-    text(g,"SISHHIN AMP",{104,12,220,34},28,light,Justification::centredLeft);text(g,"FREE / DJENT ENGINE",{106,43,200,15},10,Colour(0xff9f9a8d),Justification::centredLeft);
-    for(auto r:{Rectangle<int>(0,65,91,664),{97,65,286,322},{389,65,286,322},{681,65,286,322},{973,65,87,664},{97,651,870,78}}){
-        g.setGradientFill(ColourGradient(paper.brighter(.18f),0,static_cast<float>(r.getY()),paper.darker(.16f),0,static_cast<float>(r.getBottom()),false));g.fillRect(r);
-        g.setColour(Colour(0xff454039));g.drawRect(r,2);g.setColour(Colour(0xffddd7c5));g.drawRect(r.reduced(5),1);
-    }
-    Random rng(230819);for(int i=0;i<8500;++i){int x=rng.nextInt(1060),y=65+rng.nextInt(664);g.setColour(Colour(i%3==0?0x226a1410:0x18201b17));g.fillRect(x,y,rng.nextInt(3)+1,1);}
-    for(int edge:{98,382,390,674,682,965})for(int i=0;i<65;++i){int y=66+rng.nextInt(320),x=edge+rng.nextInt(9)-4;g.setColour(Colour(0x8890231d));g.drawLine(static_cast<float>(x),static_cast<float>(y),static_cast<float>(x+rng.nextInt(5)-2),static_cast<float>(y+rng.nextInt(24)),.6f);}
-    g.setGradientFill(ColourGradient(Colour(0xff383735),500,385,Colour(0xff0b0d0e),500,652,false));g.fillRect(98,387,868,264);
-    for(int i=0;i<1100;++i){int x=98+rng.nextInt(868),y=389+rng.nextInt(258);g.setColour(Colour(0x163c3931));g.drawVerticalLine(x,static_cast<float>(y),static_cast<float>(y+rng.nextInt(32)));}
-    // Forged ribs frame the amp, echoing the reference's mechanical arch.
-    for(int side:{-1,1})for(int j=0;j<10;++j){float t=j/9.f;float cx=530+side*(225+175*t),cy=415+170*t;
-        Path p;p.startNewSubPath(cx,cy);p.lineTo(cx+side*37,cy+14);p.lineTo(cx+side*18,cy+51);p.lineTo(cx-side*17,cy+27);p.closeSubPath();
-        g.setGradientFill(ColourGradient(Colour(0xff686459),cx,cy,Colour(0xff151718),cx+side*25,cy+40,false));g.fillPath(p);g.setColour(Colour(0xff817567));g.strokePath(p,PathStrokeType(1));g.setColour(red.darker(.6f));g.drawLine(cx,cy+3,cx+side*20,cy+14,2);
-        g.setColour(Colour(0xff99907e));g.fillEllipse(cx+side*13-2,cy+16,4,4);
-    }
-    text(g,"PRECISION HIGH GAIN",{375,427,310,18},11,Colour(0xff8f8879));
-    text(g,processor.profileReady.load()?"PROFILE READY":"NO PROFILE",{117,346,131,20},11,ink);
-    for(int i=0;i<sishhin::bands;++i){float db=processor.matchDb[i].load();g.setColour(red.withAlpha(.7f));g.fillRect(130+i*21,372-roundToInt(jmax(0.f,db)*.8f),12,jmax(1,roundToInt(std::abs(db)*.8f)));}
-    auto meter=[&](int x,float db){g.setColour(Colour(0xff272827));g.fillRect(x,239,7,359);float fraction=jlimit(0.f,1.f,(db+60)/60);g.setColour(db>=0?Colour(0xffff362b):Colour(0xffa34d3b));g.fillRect(x,598-roundToInt(359*fraction),7,roundToInt(359*fraction));
-        for(int d=0;d<=60;d+=12)text(g,String(-d),{x-14,231+d*6,20,12},9,ink);};meter(17,inputMeter);meter(1037,outputMeter);
-    text(g,"INPUT",{3,630,83,18},12,ink);text(g,"OUTPUT",{974,630,83,18},12,ink);
-    if(processor.value("tuner")>.5f){g.saveState();g.reduceClipRegion(609,766,272,8);g.setColour(std::abs(processor.tunerCents.load())<3?Colour(0xffaaa98c):red.brighter(.35f));
-        for(int i=-1;i<16;++i)g.fillRect(609+i*20+roundToInt(strobePhase),767,7,6);g.setColour(light);g.fillRect(744,766,2,8);g.restoreState();}
+    g.fillAll(bg);g.setColour(Colour(0xff111a22));g.fillRect(0,0,1200,99);g.setColour(border);g.drawHorizontalLine(98,0,1200);
+    // Original monogram: fractured obelisk with an offset core.
+    Path logo;logo.startNewSubPath(25,22);logo.lineTo(51,22);logo.lineTo(42,40);logo.lineTo(58,40);logo.lineTo(35,69);logo.lineTo(42,47);logo.lineTo(23,47);logo.closeSubPath();g.setColour(accent);g.fillPath(logo);
+    text(g,"SISHHIN",{72,17,230,40},31,white,Justification::centredLeft,true);text(g,"T H A L L   E N G I N E",{75,57,220,20},10,muted,Justification::centredLeft);
+    card(g,{16,106,179,686});card(g,{210,106,740,315});card(g,{210,437,740,355});card(g,{966,106,218,686});
+    text(g,"S P A C E",{985,116,180,24},12,muted,Justification::centredLeft,true);
+    text(g,"4x",{384,119,38,21},12,accent,Justification::centredLeft,true);text(g,"DYNAMIC GAIN CORE",{435,119,290,21},11,muted,Justification::centredLeft);
+    text(g,"PRECISION / PRESSURE",{239,377,160,20},9,muted);
+    // A decorative contour gives the amplifier its own visual identity.
+    const float gains[]{processor.value("low"),processor.value("mid"),processor.value("high"),processor.value("presence")};Path contour;
+    for(int i=0;i<490;++i){float v=0;for(int band=0;band<4;++band){float d=(i-(45+band*126))/55.f;v+=gains[band]*std::exp(-d*d*.5f);}float x=422.f+i,y=178.f-v*.9f;if(i==0)contour.startNewSubPath(x,y);else contour.lineTo(x,y);}
+    g.setColour(border);g.drawHorizontalLine(178,422,912);g.setColour(accent.withAlpha(.6f));g.strokePath(contour,PathStrokeType(1.5f));
+    for(int x=422;x<=912;x+=49){g.setColour(Colour(0xff2b3a43));g.fillEllipse(static_cast<float>(x),192,2,2);}
+    auto meter=[&](int x,float db){g.setColour(Colour(0xff070b10));g.fillRoundedRectangle(static_cast<float>(x),400,5,257,2);float fraction=jlimit(0.f,1.f,(db+60)/60);g.setColour(db>=0?Colour(0xffff6e73):accent);g.fillRoundedRectangle(static_cast<float>(x),657-257*fraction,5,257*fraction,2);};meter(24,inputMeter);meter(183,outputMeter);
+    text(g,String(inputMeter,1)+" dB",{26,331,64,18},10,muted);text(g,String(outputMeter,1)+" dB",{111,331,70,18},10,muted);
+    g.setColour(border);g.drawHorizontalLine(365,983,1167);g.drawHorizontalLine(564,983,1167);text(g,"ATTACK-SAFE AMBIENCE",{978,548,194,18},9,muted);
+    if(page==0){g.setColour(border);g.drawVerticalLine(704,505,756);text(g,"FOUR VOICES. ONE HEAVY SIGNAL.",{242,730,432,22},11,muted);}
+    if(page==1){text(g,"CHORD-CAPABLE GRAIN SHIFT / INDEPENDENT SUB AMPLIFIER",{425,511,493,22},10,muted,Justification::centredRight);}
+    if(page==2){text(g,processor.profileReady.load()?"PROFILE READY":"NO CAPTURED PROFILE",{240,688,250,20},11,processor.profileReady.load()?accent:muted);
+        g.setColour(border);g.drawHorizontalLine(737,240,491);for(int i=0;i<sishhin::bands;++i){float db=processor.matchDb[i].load();g.setColour(accent.withAlpha(.7f));g.fillRect(244+i*25,737-roundToInt(jmax(0.f,db)*2),13,jmax(2,roundToInt(std::abs(db)*2)));}
+        text(g,"MATCH THE INPUT. KEEP THE ATTACK.",{534,729,359,22},11,muted);}
+    if(page==3){text(g,processor.value("cab")==4?processor.irName():"FOUR ORIGINAL CABINET VOICES / EMBEDDED IR RECALL",{245,694,651,28},12,accent);text(g,"WAV / AIFF   |   MONO / STEREO   |   UP TO 2 SECONDS",{245,733,651,22},10,muted);}
+    if(processor.value("tuner")>.5f){g.saveState();g.reduceClipRegion(404,94,518,4);g.setColour(std::abs(processor.tunerCents.load())<3?lime:accent);for(int i=-1;i<29;++i)g.fillRect(404+i*20+roundToInt(strobePhase),94,7,3);g.restoreState();}
 }
 void SishhinEditor::report(const Result& result,const String& ok){status.setText(result.wasOk()?ok:result.getErrorMessage(),dontSendNotification);}
 void SishhinEditor::chooseFile(int mode){
     const bool saving=mode==2;chooser=std::make_unique<FileChooser>(mode==0?"Load tone reference":mode==1?"Load cabinet impulse response":saving?"Save SISHHIN preset":"Open SISHHIN preset",File{},mode<2?"*.wav;*.aif;*.aiff":"*.sishhin");
-    auto safe=Component::SafePointer<SishhinEditor>(this);
-    chooser->launchAsync((saving?FileBrowserComponent::saveMode|FileBrowserComponent::warnAboutOverwriting:FileBrowserComponent::openMode)|FileBrowserComponent::canSelectFiles,[safe,mode](const FileChooser& fc){if(!safe)return;auto f=fc.getResult();if(f==File{})return;
-        if(mode==0)safe->report(safe->processor.loadReference(f),"Reference loaded. Now CAPTURE DI while playing.");
-        if(mode==1)safe->report(safe->processor.loadIR(f),"Custom IR loaded: "+f.getFileName());
-        if(mode==2){MemoryBlock b;safe->processor.getStateInformation(b);f=f.withFileExtension("sishhin");safe->report(f.replaceWithData(b.getData(),b.getSize())?Result::ok():Result::fail("Could not save preset"),"Preset saved: "+f.getFileName());}
-        if(mode==3){MemoryBlock b;f.loadFileAsData(b);auto xml=AudioProcessor::getXmlFromBinary(b.getData(),static_cast<int>(b.getSize()));if(xml && xml->hasTagName("SISHHIN")){
-            safe->processor.setStateInformation(b.getData(),static_cast<int>(b.getSize()));safe->status.setText("Preset loaded: "+f.getFileName(),dontSendNotification);
-        }else safe->status.setText("Invalid preset file",dontSendNotification);}
+    auto safe=Component::SafePointer<SishhinEditor>(this);chooser->launchAsync((saving?FileBrowserComponent::saveMode|FileBrowserComponent::warnAboutOverwriting:FileBrowserComponent::openMode)|FileBrowserComponent::canSelectFiles,[safe,mode](const FileChooser& fc){if(!safe)return;auto file=fc.getResult();if(file==File{})return;
+        if(mode==0)safe->report(safe->processor.loadReference(file),"Reference loaded. Capture your input while playing.");if(mode==1)safe->report(safe->processor.loadIR(file),"Custom cabinet loaded: "+file.getFileName());
+        if(mode==2){MemoryBlock b;safe->processor.getStateInformation(b);file=file.withFileExtension("sishhin");safe->report(file.replaceWithData(b.getData(),b.getSize())?Result::ok():Result::fail("Could not save preset"),"Preset saved: "+file.getFileName());}
+        if(mode==3){MemoryBlock b;file.loadFileAsData(b);auto xml=AudioProcessor::getXmlFromBinary(b.getData(),static_cast<int>(b.getSize()));if(xml && xml->hasTagName("SISHHIN")){safe->processor.setStateInformation(b.getData(),static_cast<int>(b.getSize()));safe->status.setText("Preset loaded: "+file.getFileName(),dontSendNotification);}else safe->status.setText("Invalid preset file",dontSendNotification);}
     });
 }
 void SishhinEditor::timerCallback(){
     inputMeter=jmax(Decibels::gainToDecibels(processor.inputPeak.load(),-60.f),inputMeter-1.8f);outputMeter=jmax(Decibels::gainToDecibels(processor.outputPeak.load(),-60.f),outputMeter-1.8f);
-    const int remaining=processor.captureRemaining.load();listen.setButtonText(remaining>0?"LISTENING...":"CAPTURE DI");
-    float calibration=0;if(processor.takeCalibration(calibration)){if(calibration<1000){processor.set("input",calibration);status.setText("Input calibrated to "+String(calibration,1)+" dB",dontSendNotification);}else status.setText("Calibration needs an audible guitar signal",dontSendNotification);autoTicks=0;}
-    if(autoTicks>0)--autoTicks;autoGain.setButtonText(autoTicks>0?"PLAY...":"AUTO GAIN");
-    tunerLabel.setText(processor.value("tuner")>.5f?processor.tunerText():"",dontSendNotification);strobePhase+=processor.tunerCents.load()*.025f;strobePhase=std::fmod(strobePhase+20,20.f);repaint();
+    listen.setButtonText(processor.captureRemaining.load()>0?"CAPTURING...":"CAPTURE INPUT");float calibration=0;
+    if(processor.takeCalibration(calibration)){if(calibration<1000){processor.set("input",calibration);status.setText("Input calibrated to "+String(calibration,1)+" dB",dontSendNotification);}else status.setText("Calibration needs an audible guitar signal",dontSendNotification);autoTicks=0;}
+    if(autoTicks>0)--autoTicks;autoGain.setButtonText(autoTicks>0?"PLAY YOUR RIFF...":"CALIBRATE INPUT");
+    tunerLabel.setText(processor.value("tuner")>.5f?processor.tunerText():"LOW TUNINGS. HIGH INTENT.",dontSendNotification);strobePhase=std::fmod(strobePhase+processor.tunerCents.load()*.025f+20,20.f);
+    if(displayedPreset!=processor.getCurrentProgram()){displayedPreset=processor.getCurrentProgram();presets.setSelectedId(displayedPreset+1,dontSendNotification);}repaint();
 }

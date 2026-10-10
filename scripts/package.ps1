@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force $OutputDir | Out-Null
 Copy-Item "$BuildDir/SishhinAmp_artefacts/Release/VST3/SISHHIN AMP.vst3" $OutputDir -Recurse -Force
 Copy-Item "$BuildDir/SishhinAmp_artefacts/Release/Standalone/SISHHIN AMP.exe" $OutputDir -Force
-Copy-Item README.md,LICENSE,THIRD_PARTY.md,SISHHIN-AMP.png $OutputDir -Force
+Copy-Item README.md,LICENSE,THIRD_PARTY.md,SISHHIN-*.png $OutputDir -Force
 $notices = Join-Path $OutputDir 'licenses'
 New-Item -ItemType Directory -Force $notices | Out-Null
 $juce = "$BuildDir/_deps/juce-src"

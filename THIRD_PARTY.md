@@ -8,4 +8,4 @@ JUCE bundles the VST3 SDK, distributed in that revision under GPLv3 / Steinberg'
 
 JUCE also includes supporting components such as FLAC (BSD), Ogg/Vorbis (BSD), libpng (zlib), zlib, libjpeg (IJG), HarfBuzz (MIT) and SheenBidi (Apache 2.0). See the framework's LICENSE.md and individual source headers for their full notices. The build copies these applicable notices into the distribution's `licenses` directory.
 
-No Slam Amp binaries, cabinet recordings, fonts, images or presets are redistributed. The supplied file was inspected only for readable public-facing parameter names and descriptions; all audio code and UI drawing here are newly implemented.
+All SISHHIN artwork is drawn in code. Factory cabinet responses and the 28 sound presets are original designs. No third-party product artwork, cabinet recordings or preset packs are included.

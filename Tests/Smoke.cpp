@@ -7,10 +7,13 @@ void check(bool condition,const char* message){if(!condition)throw std::runtime_
 void signal(AudioBuffer<float>& b,double sr,int offset=0){for(int c=0;c<b.getNumChannels();++c)for(int i=0;i<b.getNumSamples();++i)b.setSample(c,i,.13f*std::sin(static_cast<float>((i+offset)*MathConstants<double>::twoPi*110/sr)));}
 int main(int argc,char** argv){ScopedJuceInitialiser_GUI init;
 try{
-    if(argc>1 && String(argv[1])=="--render"){auto p=std::make_unique<SishhinProcessor>();std::unique_ptr<AudioProcessorEditor> e(p->createEditor());auto image=e->createComponentSnapshot(e->getLocalBounds());File file=File::getCurrentWorkingDirectory().getChildFile("SISHHIN-AMP.png");auto stream=file.createOutputStream();check(stream!=nullptr,"PNG stream");stream->setPosition(0);stream->truncate();check(PNGImageFormat().writeImageToStream(image,*stream),"PNG render");std::cout<<file.getFullPathName()<<std::endl;return 0;}
+    if(argc>1 && String(argv[1])=="--render"){auto p=std::make_unique<SishhinProcessor>();std::unique_ptr<SishhinEditor> e(static_cast<SishhinEditor*>(p->createEditor()));
+        const char* files[]{"SISHHIN-AMP.png","SISHHIN-PITCH.png","SISHHIN-MATCH.png","SISHHIN-CABINET.png"};
+        for(int page=0;page<4;++page){e->showPage(page);auto image=e->createComponentSnapshot(e->getLocalBounds());File file=File::getCurrentWorkingDirectory().getChildFile(files[page]);auto stream=file.createOutputStream();check(stream!=nullptr,"PNG stream");stream->setPosition(0);stream->truncate();check(PNGImageFormat().writeImageToStream(image,*stream),"PNG render");std::cout<<file.getFullPathName()<<std::endl;}return 0;}
     for(double sr:{44100.,48000.,96000.})for(int chans:{1,2}){
         auto p=std::make_unique<SishhinProcessor>();p->setPlayConfigDetails(chans,chans,sr,256);p->prepareToPlay(sr,256);MidiBuffer midi;AudioBuffer<float> b(chans,777);
-        for(int preset=0;preset<6;++preset){p->factoryPreset(preset);double energy=0;
+        check(p->getNumPrograms()==28,"Expected 28 factory programs");
+        for(int preset=0;preset<p->getNumPrograms();++preset){p->factoryPreset(preset);double energy=0;
             for(int pass=0;pass<16;++pass){signal(b,sr,pass*b.getNumSamples());p->processBlock(b,midi);for(int c=0;c<chans;++c)for(int i=0;i<b.getNumSamples();++i){float v=b.getSample(c,i);check(std::isfinite(v),"Non-finite audio");check(std::abs(v)<=4,"Unbounded output");energy+=v*v;}}
             check(energy>1.e-5,"Silent factory preset");}
         p->set("bypass",1);signal(b,sr);float original=b.getSample(0,20);p->processBlock(b,midi);check(b.getSample(0,20)==original,"Bypass changes audio");p->set("bypass",0);
@@ -37,6 +40,9 @@ try{
     sishhin::Pitch shifter;int crossings=0;float previous=0;
     for(int i=0;i<96000;++i){float v=shifter.tick(.2f*std::sin(static_cast<float>(i*MathConstants<double>::twoPi*220/48000)),12,48000);if(i>=48000 && previous<=0 && v>0)++crossings;previous=v;}
     check(std::abs(crossings-440)<15,"Octave pitch frequency");
-    std::cout<<"PASS: presets, finite output, mono/stereo, 44.1/48/96k, oversized blocks, bypass, tuner/mute, state, tone lock, capture, calibration, embedded stereo IR recall and octave pitch\n";
+    // Effects must produce an audible tail after the dry input ends.
+    for(const char* effect:{"delayOn","reverbOn"}){auto fx=std::make_unique<SishhinProcessor>();fx->set("ampOn",0);fx->set("characterOn",0);fx->set("cabOn",0);fx->set("gate",-80);fx->set("duck",0);fx->set(effect,1);fx->set("delayMix",50);fx->set("reverbMix",50);fx->prepareToPlay(48000,512);
+        AudioBuffer<float> tail(2,512);double energy=0;for(int pass=0;pass<180;++pass){tail.clear();if(pass<8)signal(tail,48000,pass*512);fx->processBlock(tail,midi);if(pass>24)for(int i=0;i<512;++i)energy+=tail.getSample(0,i)*tail.getSample(0,i);}check(energy>1.e-6,"Ambience has no tail");}
+    std::cout<<"PASS: 28 presets, finite output, mono/stereo, 44.1/48/96k, oversized blocks, bypass, tuner/mute, state, tone lock, capture, calibration, embedded stereo IR recall, octave pitch, delay/reverb tails\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<"FAIL: "<<e.what()<<std::endl;return 1;}}

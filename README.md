@@ -1,54 +1,63 @@
-# SISHHIN AMP
+# SISHHIN AMP / Thall Engine 1.1
 
-A free, open-source Windows x64 VST3 and standalone guitar amplifier for djent, thall and extended-range guitars. No accounts, activation, trial timer, licence keys or online checks.
+A free, open-source Windows x64 **VST3 and standalone** guitar amplifier for extended-range rhythm, thall, dissonant leads and atmospheric sound design. No accounts, activation, trial timer, keys or online checks.
 
-The editor follows the supplied Slam Amp reference's control layout: distressed light metal panels, red indicators, three upper processing sections, a dark central amplifier, side level meters and a bottom cabinet strip. The artwork is drawn in code and the DSP is a new implementation. This is **not a bit-exact or sound-identical clone**.
+## Interface
+
+An original dark interface with mint and lime accents, a fractured-obelisk monogram, a large dynamic amplifier panel and a dedicated ambience rack. The four lower tabs provide **Character**, **Pitch Matrix**, **Spectral Match** and **Cabinet** controls. Input/output meters, calibration, tuner, preset navigation and the amp remain accessible throughout.
 
 ## Download and install
 
-Open **Actions → Build Windows VST3 → latest successful run → Artifacts → SISHHIN-AMP-Windows-x64**. GitHub may require sign-in to download Actions artifacts.
+Open [Actions](https://github.com/amsiraj1-debug/SISHHINAMP/actions) → **Build Windows VST3** → latest successful run → **Artifacts** → **SISHHIN-AMP-Windows-x64**. GitHub may require sign-in for artifact downloads.
 
-Extract the ZIP. Copy the **entire `SISHHIN AMP.vst3` folder**, including its Contents directory, into `C:\Program Files\Common Files\VST3\`. Rescan plugins in your DAW. Do not copy just the inner binary. The standalone executable can be run from the extracted folder; select your input/output device in its audio settings. Start with your interface output low and use headphones to avoid acoustic feedback.
+Extract the ZIP and copy the **entire `SISHHIN AMP.vst3` folder**, including Contents, into `C:\Program Files\Common Files\VST3\`. Rescan plugins in your DAW. Do not copy just the inner binary. Run `SISHHIN AMP.exe` for standalone use, then select your audio device and guitar input. Start with the interface output low.
 
-## Signal path
+## Tone and effects
 
-Input → gate → tone match → whammy / dissonance / sub-octave → character → high-gain amp → four-band EQ → cabinet convolution → cuts / lo-fi → tempo stutter → output.
+* **Dynamic amplifier:** 4× oversampled multistage saturation, Drive, Low, Mid, High and Presence. Low End Focus controls bass entering the distortion; Pick Attack uses fast/slow envelopes to emphasize transients; Power Sag creates level-dependent compression.
+* **Four character voices:** RAZOR focused drive, MIRE dense fuzz, RELIC gated octave fracture and MAUL asymmetric weight. Distortion, Tone, Colour and makeup gain shape each voice.
+* **Pitch Matrix:** continuous −24 to +12 semitone Whammy, a +1 semitone Dissonance voice, one/two-octave Sub Weight, sub filtering and an optional independent sub amplifier. Cleanse removes the sub layer during whammy moves.
+* **Spectral Match:** import an isolated reference WAV/AIFF, then capture three seconds of live input. Ten logarithmic bands provide up to ±12 dB of correction, with Amount and Smooth. A lock protects matching and input trim across factory preset changes.
+* **Rhythmic stutter:** eight straight, dotted and triplet subdivisions, host tempo/transport synchronization, Depth and Short Gate. A fallback BPM works when no host tempo is available.
+* **Cabinet:** four original synthetic FIR voices—Obsidian, Iron, Ruin and Monolith—plus custom mono/stereo WAV or AIFF IRs up to two seconds. Imported IR audio is embedded in presets and sessions.
+* **Space rack:** tempo delay with five subdivisions and filtered cross-feedback; diffuse stereo reverb with Mix and Size. Ducking suppresses ambience under attacks, while Tone filters the wet effects. Stutter happens before ambience so tails can continue naturally.
+* **Utility:** input calibration to −18 dBFS RMS, adjustable gate, input/output trim and peak meters, mono/stereo, low/high cuts, lo-fi, tuner with note/cents/Hz and moving strobe strip, optional tuner mute and global bypass.
+* **Recall:** 28 host-visible factory programs, save/open `.sishhin` files, embedded match/IR data and host automation for all sound controls.
 
-Parallel routes the sub voice through its own character, amplifier and EQ chain before cabinet mixing. Mono sums the input channels; Stereo preserves independent channels. The nonlinear character and amplifier paths run at 4× sample rate. The host receives the oversampling latency. Pitch shifting has additional variable time smear inherent to the granular algorithm, which is not a fixed delay suitable for host compensation.
+### Recommended starting points
 
-## Controls
+Start with **Obsidian**, **Razor Grid** or **Eight String Focus** for articulation. Use **Null Cathedral**, **Monolith** or **Subzero** for low, heavy thall. **Event Horizon**, **Grey Bloom** and **Slow Collapse** explore longer delay/reverb fields. Increase Ducking when ambience obscures your palm mutes.
 
-| Section | Included functionality |
+Low End Focus removes bass **before** distortion; Low Cut filters the sound **after** the cabinet. They have different effects on the tone. Keep Power Sag low for rigid rhythms and raise it for softer, blooming sustain.
+
+### 28 original factory presets
+
+| Category | Presets |
 | --- | --- |
-| Input | ±24 dB input, three-second auto calibration to −18 dBFS RMS, peak meter, gate threshold (−80 dB disables gate) |
-| Tone match | Load isolated reference WAV/AIFF (first 30 seconds), capture three seconds of live DI, ten logarithmic correction bands clamped to ±12 dB, Amount and Smooth, profile recall, input/tone lock on factory preset changes |
-| Character | RAZOR cutting saturation, MIRE thick atan fuzz, RELIC rectified/gated octave fuzz, MAUL asymmetric growl; Distortion, Tone, Colour and makeup gain |
-| Stutter | Host tempo/transport synchronization, eight straight/dotted/triplet divisions, Depth, Tighten and fallback BPM |
-| Pitch | Continuous −24 to +12 semitone Whammy, +1 semitone Dissonance blend, −1/−2 octave Thicken, sub high cut, Cleanse and Parallel routing |
-| Amplifier | Multistage high-gain saturation, Drive, Low, Mid, High, Presence, mono/stereo |
-| Cabinet | Four original synthetic cabinet FIRs: Obsidian, Iron, Ruin and Monolith; custom mono/stereo WAV or AIFF IR up to two seconds; embedded IR recall |
-| Output | Low/high cuts with endpoint-off settings, lo-fi band limiting, output trim and peak meter, global bypass |
-| Tuner | Autocorrelation note/octave/cents/Hz display and moving strobe strip with optional mute; suitable for individual notes down to approximately 30 Hz |
-| Presets | Six original factory sounds, save/open `.sishhin` files, host session recall; presets embed custom IR and match data |
-| Host | Parameter automation, mono, stereo and mono-to-stereo buses; VST3 and standalone |
+| Djent | Obsidian · Razor Grid · Glass Teeth · Polyrhythm · Carbon Crunch · Eight String Focus |
+| Thall | Null Cathedral · Abyssal · Cold Sun · Monolith · Dislocated · Subzero |
+| Space | Event Horizon · Grey Bloom · Halo · Slow Collapse · Arctic Memory · Night Glass |
+| Lead | Signal Fire · Liquid Mercury · Screaming Wire · Pale Orbit |
+| Fuzz | Mire · Ruin · Broken Relic · Rust Ritual |
+| FX | Fracture · Blackout |
 
-Double-click a knob to reset. Numeric values beneath controls can be typed directly. Hover controls for help. Red LEDs indicate enabled sections. A lit BYPASS indicator means the whole effect is bypassed.
+These are distinct parameter configurations, including different character voices, pitch routing, input dynamics, cabinet choices and ambience. The arrow buttons step through presets; the DAW also sees the 28 programs. Individual configurations remain fully editable.
 
-### Tone matching
+### Spectral matching
 
-Load an **isolated guitar** target, then click **CAPTURE DI** and play representative material for three seconds. Enable TONE MATCH and adjust Amount/Smooth. Without a loaded reference the target is a flat ten-band spectrum. This matches broad input spectral balance; it does not learn an amplifier's nonlinear transfer function or reproduce a mixed master recording. A silent capture is ignored.
+Load an isolated guitar reference, click **CAPTURE INPUT**, and play representative material for three seconds. Adjust Match Amount and Spectral Smooth. Without an imported reference the target is a flat ten-band spectrum. Silent captures are ignored. This matches broad spectral balance, not nonlinear amplifier behavior or a full mixed song.
 
-### Pitch and routing
+### Pitch, latency and tails
 
-The pitch engine processes chords using overlapping delay grains. Extreme shifts and complex chords can produce modulation, transient smear and grain coloration. It is not claimed to match the proprietary source plugin's polyphonic pitch quality. Cleanse suppresses Thicken whenever Whammy is away from zero. Thicken at 100% removes the unshifted main voice (Dissonance remains independently adjustable). Parallel gives the octave a separate distortion path.
+Pitch processing uses overlapping delay grains and can process chords, but extreme shifts may smear attacks or introduce modulation. Oversampling latency is reported to the host. Pitch time smear varies with the shift and is not a fixed delay suitable for host compensation. Host tail length is conservatively reported as 60 seconds for high-feedback delay and large reverb settings.
 
-### Presets and portability
+### Preset portability
 
-Save/Open writes all parameters, the captured curve, target spectrum and custom IR into one file. DAW state uses the same representation. The custom IR therefore travels with the session and does not depend on the original path. Artist presets and original cabinet samples from the reference plugin are not included; factory sounds here are original designs with no artist endorsement.
+Save/Open stores parameters, the captured curve, target spectrum and custom IR audio together. Host session recall uses the same representation, so moving the original IR file does not break the preset. Double-click a control to reset it; click its numeric value to type directly. Hover for help. A lit BYPASS means the entire effect is bypassed.
 
-## Build locally
+## Build
 
-Requirements: CMake 3.22+, Git, Visual Studio 2019 or newer with Desktop development with C++ and a Windows SDK. Configure needs internet access for the pinned JUCE revision.
+Requirements: CMake 3.22+, Git and Visual Studio 2019 or newer with C++ desktop tools and a Windows SDK. Initial configuration fetches a pinned JUCE revision.
 
 ```powershell
 cmake -S . -B build -A x64
@@ -61,14 +70,14 @@ Outputs:
 * `build/SishhinAmp_artefacts/Release/VST3/SISHHIN AMP.vst3`
 * `build/SishhinAmp_artefacts/Release/Standalone/SISHHIN AMP.exe`
 
-The GitHub Actions workflow performs the same build, runs offline DSP regressions, renders the real editor, and uploads an installable artifact. It runs on main pushes, pull requests, version tags and manual dispatch. It does not require signing secrets or a paid JUCE account.
+The GitHub Actions workflow builds both formats, runs the DSP regression suite, renders all four editor pages and uploads the installable Windows artifact. It runs on main pushes, pull requests, version tags and manual dispatch. No signing secrets are required.
 
-## Verification and limitations
+## Validation and scope
 
-Offline checks cover finite/bounded and non-silent audio across six presets, mono/stereo at 44.1/48/96 kHz, oversized host blocks, bypass, tuner mute, note detection, state recall, tone lock, tone capture, auto gain, embedded stereo IR recall after the source file is removed, sample-rate changes and octave pitch frequency. These checks do not constitute listening tests or validation in every DAW. Test the plugin in your preferred DAW before relying on it in a live or paid session.
+The offline suite checks all 28 factory presets in mono/stereo at 44.1/48/96 kHz, finite and non-silent output, oversized blocks, bypass, tuner, state, tone lock, capture, calibration, embedded stereo IR recall, pitch frequency and delay/reverb tails. The plugin is also checked with pluginval level 5. These automated checks are not a substitute for listening and testing in your preferred DAW.
 
-Windows VST3 and standalone are the supported deliverables. AU, AAX, macOS binaries and original artist preset packs are not supplied. Stock IRs are synthetic resonant filters, not recovered recordings of physical cabinets. No binary patching, activation bypass, proprietary DSP extraction or copying of the supplied plugin's embedded assets is performed.
+Windows VST3 and standalone are the supported deliverables. Cabinet defaults are original synthetic resonant FIRs. AU, AAX and macOS binaries are not included.
 
 ## Source licence
 
-SISHHIN AMP is distributed under **AGPL-3.0-or-later**, with dependency notices in THIRD_PARTY.md and LICENSE. This is an open-source distribution licence, not a user activation system. The source is available at https://github.com/amsiraj1-debug/SISHHINAMP.
+AGPL-3.0-or-later, with dependency notices in LICENSE and THIRD_PARTY.md. This is an open-source distribution licence, not an activation system. Source: [amsiraj1-debug/SISHHINAMP](https://github.com/amsiraj1-debug/SISHHINAMP).

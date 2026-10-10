@@ -13,9 +13,10 @@ public:
     bool hasEditor() const override {return true;}
     const juce::String getName() const override {return "SISHHIN AMP";}
     bool acceptsMidi() const override {return false;} bool producesMidi() const override {return false;}
-    double getTailLengthSeconds() const override {return 2.;}
-    int getNumPrograms() override {return 1;} int getCurrentProgram() override {return 0;}
-    void setCurrentProgram(int) override {} const juce::String getProgramName(int) override {return "User";}
+    double getTailLengthSeconds() const override {return 60.;}
+    static const juce::StringArray& presetNames();
+    int getNumPrograms() override {return presetNames().size();} int getCurrentProgram() override {return currentPreset.load();}
+    void setCurrentProgram(int index) override {factoryPreset(index);} const juce::String getProgramName(int index) override {return presetNames()[juce::jlimit(0,presetNames().size()-1,index)];}
     void changeProgramName(int,const juce::String&) override {}
     void getStateInformation(juce::MemoryBlock&) override;
     void setStateInformation(const void*,int) override;
@@ -43,13 +44,19 @@ private:
         sishhin::Biquad pre,colour,dc,low,mid,high,presence,loCut,hiCut,subCut,cleanse;
         std::array<sishhin::Biquad,sishhin::bands> match;
         sishhin::Pitch whammy,sub,dissonance;
-        float envelope=0,gate=0,previous=0;
+        float envelope=0,gate=0,previous=0,attackFast=0,attackSlow=0,sagEnvelope=0;
     };
     std::array<Channel,4> channels;
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampler;
     std::array<std::unique_ptr<juce::dsp::Convolution>,5> cabinets;
     juce::SmoothedValue<float> inGain,outGain,whammyShift,driveGain;
     juce::AudioBuffer<float> parallelSub,ampWork;
+    juce::AudioBuffer<float> delayBuffer,reverbWork;
+    juce::Reverb reverb;
+    std::array<sishhin::Biquad,2> delayTone,spaceTone;
+    juce::SmoothedValue<float> delaySamples,delayWet,reverbWet;
+    int delayWrite=0;float duckEnvelope=0;
+    std::atomic<int> currentPreset{0};
     double stutterPhase=0; float stutterGain=1;
     juce::AudioFormatManager formats;
     mutable juce::CriticalSection assetsLock;
